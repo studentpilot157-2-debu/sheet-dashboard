@@ -2,72 +2,142 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Google Sheet Dashboard</title>
+
+<title>Analytics Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
 body{
 font-family:Arial;
-max-width:1200px;
-margin:auto;
-padding:20px;
+background:#f5f7fb;
+padding:30px;
+}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
 }
 
 .card{
+background:white;
 padding:20px;
-border:1px solid #ddd;
-border-radius:12px;
-margin-bottom:20px;
+border-radius:16px;
+box-shadow:0 4px 15px rgba(0,0,0,.08);
 }
 
 canvas{
-max-height:400px;
+background:white;
+padding:20px;
+border-radius:16px;
+margin-top:20px;
 }
+
+table{
+width:100%;
+background:white;
+margin-top:20px;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid #ddd;
+}
+
 </style>
+
 </head>
 
 <body>
 
-<h1>📊 Google Sheet Dashboard</h1>
+<h1>📊 Google Sheet Analytics</h1>
+
+<div class="cards">
 
 <div class="card">
-<h3>Total Rows</h3>
-<div id="count">Loading…</div>
+<h3>Total Records</h3>
+<div id="rows">-</div>
 </div>
 
 <div class="card">
+<h3>Total Columns</h3>
+<div id="cols">-</div>
+</div>
+
+</div>
+
 <canvas id="chart"></canvas>
-</div>
+
+<table>
+<thead id="head"></thead>
+<tbody id="body"></tbody>
+</table>
 
 <script>
 
-const csvURL =
+const url =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4moKnAjP3PbK0FB_OuX8EGONMfMCN1Qp9_cteII5VQdENjoRoHnc8FP3ZoqHar-KlxDFT_wO1Acwa/pub?gid=125785087&single=true&output=csv";
 
-async function loadData(){
+async function load(){
 
-const text =
-await fetch(csvURL).then(r=>r.text());
+const txt =
+await fetch(url)
+.then(r=>r.text());
 
 const rows =
-text.split("\n")
+txt
+.split("\n")
 .map(r=>r.split(","));
 
-document.getElementById("count")
-.innerHTML =
-rows.length-1;
+const headers =
+rows[0];
+
+const data =
+rows.slice(1);
+
+document.getElementById("rows")
+.innerHTML=data.length;
+
+document.getElementById("cols")
+.innerHTML=headers.length;
+
+document.getElementById("head")
+.innerHTML=
+"<tr>"+
+headers
+.map(h=>`<th>${h}</th>`)
+.join("")
++"</tr>";
+
+document.getElementById("body")
+.innerHTML=
+data
+.slice(0,20)
+.map(
+r=>"<tr>"+
+r.map(
+c=>`<td>${c}</td>`
+).join("")
++"</tr>"
+)
+.join("");
 
 new Chart(
 document.getElementById("chart"),
 {
 type:"bar",
 data:{
-labels:["Rows"],
+labels:["Rows","Columns"],
 datasets:[
 {
-label:"Total Records",
-data:[rows.length-1]
+label:"Summary",
+data:[
+data.length,
+headers.length
+]
 }
 ]
 }
@@ -76,7 +146,7 @@ data:[rows.length-1]
 
 }
 
-loadData();
+load();
 
 </script>
 
